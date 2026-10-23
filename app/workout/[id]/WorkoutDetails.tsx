@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -56,10 +55,16 @@ export default function WorkoutDetails({ id }: { id: string }) {
           setWorkout(found ?? null);
         }
       } catch (error) {
-        console.error(error);
-        if (!cancelled) toast.error("Unable to load workout details.");
+        console.error("Error loading workout:", error);
+
+        if (!cancelled) {
+          setWorkout(null);
+          toast.error("Unable to load workout details.");
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
@@ -73,7 +78,10 @@ export default function WorkoutDetails({ id }: { id: string }) {
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#0d0f12] text-white">
-        <LoaderCircle className="animate-spin text-[#CCFF00]" size={32} />
+        <LoaderCircle
+          className="animate-spin text-[#CCFF00]"
+          size={32}
+        />
         <span className="ml-3">Loading workout...</span>
       </main>
     );
@@ -83,10 +91,13 @@ export default function WorkoutDetails({ id }: { id: string }) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-[#0d0f12] px-4 text-center text-white">
         <Dumbbell size={40} className="mb-4 text-[#CCFF00]" />
+
         <h1 className="text-2xl font-bold">Workout not found</h1>
+
         <p className="mt-2 text-gray-400">
           This workout could not be loaded. Please return to the library.
         </p>
+
         <Link
           href="/"
           className="mt-6 rounded-lg bg-[#CCFF00] px-5 py-3 font-bold text-black"
@@ -106,6 +117,9 @@ export default function WorkoutDetails({ id }: { id: string }) {
   );
 
   function handleAddToPlan() {
+    // Prevent passing null to addToPlan.
+    if (!workout) return;
+
     if (inPlan) {
       toast.info("This workout is already in Today's Plan.");
       return;
@@ -116,6 +130,9 @@ export default function WorkoutDetails({ id }: { id: string }) {
   }
 
   function handleSave() {
+    // Prevent passing null to addToSaved.
+    if (!workout) return;
+
     if (isSaved) {
       toast.info("This workout is already saved.");
       return;
@@ -137,6 +154,7 @@ export default function WorkoutDetails({ id }: { id: string }) {
         </Link>
 
         <div className="grid items-start gap-8 lg:grid-cols-2">
+          {/* Workout Image */}
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#171a20]">
             <img
               src={workout.image}
@@ -145,6 +163,7 @@ export default function WorkoutDetails({ id }: { id: string }) {
             />
           </div>
 
+          {/* Workout Information */}
           <section>
             <div className="mb-4 flex flex-wrap gap-2">
               {workout.muscleGroups.map((group) => (
@@ -165,61 +184,81 @@ export default function WorkoutDetails({ id }: { id: string }) {
               {workout.name}
             </h1>
 
+            {/* Duration, Calories, Rating */}
             <div className="mt-5 flex flex-wrap gap-5 text-sm text-gray-300">
               <span className="flex items-center gap-2">
                 <Clock size={17} className="text-[#CCFF00]" />
                 {workout.duration} min
               </span>
+
               <span className="flex items-center gap-2">
                 <Flame size={17} className="text-orange-400" />
                 {workout.caloriesBurned} kcal
               </span>
+
               <span className="flex items-center gap-2">
                 <Star size={17} className="text-[#CCFF00]" />
                 {workout.rating}
               </span>
             </div>
 
+            {/* Workout Stats */}
             <div className="mt-6 grid grid-cols-2 gap-3">
               <div className="rounded-xl border border-white/10 bg-[#171a20] p-4">
                 <p className="text-sm text-gray-400">Difficulty</p>
                 <p className="mt-1 font-bold">{workout.difficulty}</p>
               </div>
+
               <div className="rounded-xl border border-white/10 bg-[#171a20] p-4">
                 <p className="text-sm text-gray-400">Equipment</p>
                 <p className="mt-1 font-bold">{workout.equipment}</p>
               </div>
+
               <div className="rounded-xl border border-white/10 bg-[#171a20] p-4">
                 <p className="text-sm text-gray-400">Sets</p>
                 <p className="mt-1 font-bold">{workout.sets}</p>
               </div>
+
               <div className="rounded-xl border border-white/10 bg-[#171a20] p-4">
                 <p className="text-sm text-gray-400">Reps</p>
                 <p className="mt-1 font-bold">{workout.reps}</p>
               </div>
             </div>
 
-            <h2 className="mt-7 text-xl font-bold">About This Workout</h2>
+            {/* Description */}
+            <h2 className="mt-7 text-xl font-bold">
+              About This Workout
+            </h2>
+
             <p className="mt-3 leading-7 text-gray-400">
               {workout.description}
             </p>
 
+            {/* Instructions */}
             {workout.instructions?.length > 0 && (
               <section className="mt-7">
                 <h2 className="text-xl font-bold">Instructions</h2>
+
                 <ol className="mt-4 space-y-3">
                   {workout.instructions.map((instruction, index) => (
-                    <li key={index} className="flex gap-3 text-gray-300">
+                    <li
+                      key={index}
+                      className="flex gap-3 text-gray-300"
+                    >
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#CCFF00] text-sm font-bold text-black">
                         {index + 1}
                       </span>
-                      <span className="leading-6">{instruction}</span>
+
+                      <span className="leading-6">
+                        {instruction}
+                      </span>
                     </li>
                   ))}
                 </ol>
               </section>
             )}
 
+            {/* Action Buttons */}
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <button
                 onClick={handleAddToPlan}
@@ -227,7 +266,10 @@ export default function WorkoutDetails({ id }: { id: string }) {
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#CCFF00] px-5 py-3.5 font-bold text-black hover:bg-[#D9FF33] disabled:opacity-60"
               >
                 <CheckCircle2 size={19} />
-                {inPlan ? "Already in Today's Plan" : "Add to Today's Plan"}
+
+                {inPlan
+                  ? "Already in Today's Plan"
+                  : "Add to Today's Plan"}
               </button>
 
               <button
@@ -236,10 +278,12 @@ export default function WorkoutDetails({ id }: { id: string }) {
                 className="flex items-center justify-center gap-2 rounded-xl border border-[#CCFF00]/40 px-5 py-3.5 font-bold text-[#CCFF00] hover:bg-[#CCFF00]/10 disabled:opacity-60"
               >
                 <Bookmark size={19} />
+
                 {isSaved ? "Saved" : "Save Workout"}
               </button>
             </div>
 
+            {/* My Plan Link */}
             <Link
               href="/my-plan"
               className="mt-5 inline-flex items-center gap-2 text-sm text-gray-400 hover:text-[#CCFF00]"
